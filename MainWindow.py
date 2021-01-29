@@ -86,7 +86,7 @@ class Ui_MainWindow(object):
         self.verticalLayout.addWidget(self.lineEditDestination)
         self.gridLayout_3.addLayout(self.verticalLayout, 0, 0, 1, 1)
         self.progressBar = QtWidgets.QProgressBar(self.centralwidget)
-        self.progressBar.setProperty("value", 24)
+        self.progressBar.setProperty("value", 0)
         self.progressBar.setObjectName("progressBar")
         self.gridLayout_3.addWidget(self.progressBar, 3, 0, 1, 2)
         MainWindow.setCentralWidget(self.centralwidget)
