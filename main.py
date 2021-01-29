@@ -22,7 +22,7 @@ images = image_loader.get_images()
 number_of_images = len(images)
 safe_counter = SafeCounter( number_of_images )
 
-if (number_of_images > number_of_threads):
+if (number_of_threads > number_of_images):
     number_of_threads = number_of_images
 
 def thread_routine():
