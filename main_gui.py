@@ -2,6 +2,7 @@ import threading
 import os
 import sys
 from PyQt5 import QtWidgets, uic
+from PyQt5.QtWidgets import QFileDialog
 import datetime
 
 from image_loader import ImageLoader
@@ -13,14 +14,38 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, *args, obj=None, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
-        self.lineEditSource.textEdited.connect( self.insert_in_list )
+        self.lineEditSource.textChanged.connect( self.insert_in_list )
         self.pushButtonCompress.clicked.connect( self.compress )
+        self.pushButtonDestination.clicked.connect( self.destination_directory )
+        self.pushButtonSource.clicked.connect( self.source_directory )
+        
+    def source_directory(self): 
+        dir_path = QFileDialog.getExistingDirectory(self,
+                                                    "Choose Directory",
+                                                    "H:\\")
+        print(dir_path)
+        self.lineEditSource.setText( dir_path )
 
-    def insert_in_list(self):
-        image_loader = ImageLoader(source_path)
-        self.images = image_loader.get_images()
+    def destination_directory(self): 
+        dir_path = QFileDialog.getExistingDirectory(self,
+                                                    "Choose Directory",
+                                                    "H:\\")
+        print(dir_path)
+        self.lineEditDestination.setText( dir_path )
 
-        self.listWidgetFiles.addItems( self.images )
+    def insert_in_list(self, text):
+        try:
+            source_path = self.lineEditSource.text()
+            print(source_path)
+            image_loader = ImageLoader(source_path)
+            self.images = image_loader.get_images()
+            filenames = [image.split('\\')[-1] for image in self.images]
+            self.listWidgetFiles.addItems( filenames )
+            
+        except:
+            print('Hmmm')
+
+        
 
     def compress(self):
         number_of_threads = self.spinBoxThreads.value()
@@ -51,6 +76,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             thread.join()
         
         self.progressBar.setProperty("value", 100)
+
+    def update_progressbar(self):
+        while 1:      
+            maxVal = 100
+            self.progress_update.emit(maxVal)
+            time.sleep(1)
     
     def thread_routine(self):
         file_n = self.safe_counter.get()
