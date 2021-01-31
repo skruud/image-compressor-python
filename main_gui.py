@@ -3,14 +3,19 @@ import os
 import sys
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtWidgets import QFileDialog
-import datetime
+import time
 
 from image_loader import ImageLoader
 from safe_counter import SafeCounter
 from image_compressor import ImageCompressor
 from MainWindow import Ui_MainWindow
+from PyQt5.QtCore import QThread, pyqtSignal
+
+
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
+    _signal = pyqtSignal(int)
+
     def __init__(self, *args, obj=None, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
@@ -21,15 +26,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         
     def source_directory(self): 
         dir_path = QFileDialog.getExistingDirectory(self,
-                                                    "Choose Directory",
-                                                    "H:\\")
+                                                    "Choose Directory")
         print(dir_path)
         self.lineEditSource.setText( dir_path )
 
     def destination_directory(self): 
         dir_path = QFileDialog.getExistingDirectory(self,
-                                                    "Choose Directory",
-                                                    "H:\\")
+                                                    "Choose Directory")
         print(dir_path)
         self.lineEditDestination.setText( dir_path )
 
@@ -43,9 +46,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.listWidgetFiles.addItems( filenames )
             
         except:
-            print('Hmmm')
-
-        
+            print('Invalid directory')
 
     def compress(self):
         number_of_threads = self.spinBoxThreads.value()
@@ -53,14 +54,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         source_path = self.lineEditSource.text()
         destination_path = self.lineEditDestination.text()
         print(source_path)
+
         # Set default/output directory
         os.chdir(destination_path)
 
-        
-        
-
         number_of_images = len(self.images)
         self.safe_counter = SafeCounter( number_of_images )
+
+        self._signal.connect(self.update_progressbar)
 
         if (number_of_threads > number_of_images):
             number_of_threads = number_of_images
@@ -70,18 +71,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             threads.append( threading.Thread( target=self.thread_routine ) )
 
         for thread in threads:
-            thread.start()
+            thread.start() 
 
-        for thread in threads:
-            thread.join()
+    def update_progressbar(self, msg):
+        self.progressBar.setProperty("value", int(msg) )
+        if (int(msg)==100):
+            self.pushButtonCompress.setEnabled(True)
+        else:
+            self.pushButtonCompress.setEnabled(False)
         
-        self.progressBar.setProperty("value", 100)
-
-    def update_progressbar(self):
-        while 1:      
-            maxVal = 100
-            self.progress_update.emit(maxVal)
-            time.sleep(1)
     
     def thread_routine(self):
         file_n = self.safe_counter.get()
@@ -89,27 +87,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             ImageCompressor(self.images[file_n], quality=self.quality)
             print(len(self.images), file_n)
             file_n = self.safe_counter.get()
-            self.progressBar.setProperty("value", file_n/len(self.images)*100)
+            self._signal.emit( file_n/len(self.images)*100 )
+            
         print(file_n)
-        
+        self._signal.emit( 100 )
 
-
+       
 app = QtWidgets.QApplication(sys.argv)
 
 window = MainWindow()
 window.show()
 app.exec()
-
-
-start_time = datetime.datetime.now()
-
-
-
-
-
-
-
-
-end_time = datetime.datetime.now()
-
-print( end_time - start_time)

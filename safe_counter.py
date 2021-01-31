@@ -6,6 +6,9 @@ class SafeCounter:
         self.length = length
         self.mutex = threading.Lock()
 
+    def check(self):
+        return counter
+
     def get(self):
         if (self.counter >= self.length): 
             return -1
