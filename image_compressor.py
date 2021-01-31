@@ -12,6 +12,5 @@ class ImageCompressor:
 
     def compress(self):
         print(self.image_source.split('\\')[-1])
-        self.image.save("Compressed_and_resized_with_function_"
-                            +self.image_source.split('\\')[-1], 
-                            optimize=True, quality=self.quality)
+        self.image.save(self.image_source.split('\\')[-1], 
+                        optimize=True, quality=self.quality)
